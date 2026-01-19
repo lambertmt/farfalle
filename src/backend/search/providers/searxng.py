@@ -11,7 +11,10 @@ class SearxngSearchProvider(SearchProvider):
         self.host = host
 
     async def search(self, query: str) -> SearchResponse:
-        async with httpx.AsyncClient() as client:
+        # Increased timeout to handle multiple parallel pro-search queries
+        # Default was 5s which caused ReadTimeout during expert mode step 3
+        timeout = httpx.Timeout(60.0, connect=10.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
             link_results, image_results = await asyncio.gather(
                 self.get_link_results(client, query),
                 self.get_image_results(client, query),
